@@ -38,13 +38,21 @@ module.exports = function(grunt) {
       build: ["tmp/*.js", "build/*.js"]
     },
 
-    'release-it':{
-      options:{
-        commitMessage: "Release v<%= pkg.version %>",
-        tagName: "v<%= pkg.version %>",
-        tagAnnotation: "Release v<%= pkg.version %>",
-        buildCommand: 'grunt build',
-        publish: false
+    release: {
+      options: {
+        commitMessage: 'Release v<%= pkg.version %>',
+        tagMessage: 'Release v<%= pkg.version %>'
+      },
+    },
+
+    gitcommit:{
+      release:{
+        options:{
+          message: "Release v<%= pkg.version %>"
+        },
+        files: {
+          src: ['build/*.js', 'package.json']
+        },
       },
     },
 
@@ -61,12 +69,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-nodeunit');
   grunt.loadNpmTasks('grunt-release-steps');
   grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-git');
 
   grunt.registerTask('default', ['test']);
   grunt.registerTask('build', ['clean:build', 'coffee:compile', 'concat:build', 'uglify:build'])
-  grunt.registerTask('release:patch', ['release:bump:patch', 'build', 'release:add:commit:tag:pushTags'])
-  grunt.registerTask('release:minor', ['release:bump:minor', 'build', 'release:add:commit:tag:pushTags'])
-  grunt.registerTask('release:major', ['release:bump:major', 'build', 'release:add:commit:tag:pushTags'])
+  grunt.registerTask('release:patch', ['test', 'release:bump:patch', 'build', 'gitcommit:release', 'release:tag:pushTags'])
+  grunt.registerTask('release:minor', ['test', 'release:bump:minor', 'build', 'gitcommit:release', 'release:tag:pushTags'])
+  grunt.registerTask('release:major', ['test', 'release:bump:major', 'build', 'gitcommit:release', 'release:tag:pushTags'])
 
   grunt.registerTask('test', 'runs tests', function(){
     grunt.log.write('Running test suite');
