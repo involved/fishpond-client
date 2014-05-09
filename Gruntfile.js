@@ -41,7 +41,8 @@ module.exports = function(grunt) {
     release: {
       options: {
         commitMessage: 'Release v<%= grunt.file.readJSON("package.json").version %>',
-        tagMessage: 'Release v<%= grunt.file.readJSON("package.json").version %>'
+        tagMessage: 'Release v<%= grunt.file.readJSON("package.json").version %>',
+        tagName: 'v<%= grunt.file.readJSON("package.json").version %>'
       },
     },
 
@@ -53,6 +54,12 @@ module.exports = function(grunt) {
         files: {
           src: ['build/*.js', 'package.json']
         },
+      },
+    },
+
+    gitpush:{
+      release:{
+        remote: 'origin'
       },
     },
 
@@ -73,9 +80,9 @@ module.exports = function(grunt) {
 
   grunt.registerTask('default', ['test']);
   grunt.registerTask('build', ['clean:build', 'coffee:compile', 'concat:build', 'uglify:build'])
-  grunt.registerTask('release:patch', ['test', 'release:bump:patch', 'build', 'gitcommit:release', 'release:tag:pushTags'])
-  grunt.registerTask('release:minor', ['test', 'release:bump:minor', 'build', 'gitcommit:release', 'release:tag:pushTags'])
-  grunt.registerTask('release:major', ['test', 'release:bump:major', 'build', 'gitcommit:release', 'release:tag:pushTags'])
+  grunt.registerTask('release:patch', ['test', 'release:bump:patch', 'build', 'gitcommit:release', 'gitpush', 'release:tag:pushTags'])
+  grunt.registerTask('release:minor', ['test', 'release:bump:minor', 'build', 'gitcommit:release', 'gitpush', 'release:tag:pushTags'])
+  grunt.registerTask('release:major', ['test', 'release:bump:major', 'build', 'gitcommit:release', 'gitpush', 'release:tag:pushTags'])
 
   grunt.registerTask('test', 'runs tests', function(){
     grunt.log.write('Running test suite');
