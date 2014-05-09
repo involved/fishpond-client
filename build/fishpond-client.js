@@ -1,4 +1,4 @@
-/*! fishpond-client v0.1.1 | 2014-05-09 */
+/*! fishpond-client v0.1.2 | 2014-05-09 */
 //----------------------------------
 // Taken from: http://stackoverflow.com/questions/2790001/fixing-javascript-array-functions-in-internet-explorer-indexof-foreach-etc
 //
