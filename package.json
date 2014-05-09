@@ -1,6 +1,6 @@
 {
   "name": "fishpond-client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "devDependencies": {
     "coffee-script": "~1.7.1",
     "grunt": "~0.4.4",
