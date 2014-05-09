@@ -84,7 +84,5 @@ module.exports = function(grunt) {
   grunt.registerTask('release:minor', ['test', 'release:bump:minor', 'build', 'gitcommit:release', 'gitpush', 'release:tag:pushTags'])
   grunt.registerTask('release:major', ['test', 'release:bump:major', 'build', 'gitcommit:release', 'gitpush', 'release:tag:pushTags'])
 
-  grunt.registerTask('test', 'runs tests', function(){
-    grunt.log.write('Running test suite');
-  });
+  grunt.registerTask('test', ['nodeunit']);
 };
