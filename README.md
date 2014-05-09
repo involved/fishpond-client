@@ -9,7 +9,7 @@ JavaScript client for Fishpond/iFish.io
 Tests are written in nodeunit coffeescript and can be found in the `/test`
 directory. To run the tests locally just do:
 
-```sh
+```
 $ grunt test
 ```
 
@@ -19,13 +19,13 @@ $ grunt test
 To build the fishpond client on your machine, first you need to install all the
 modules:
 
-```sh
+```
 $ npm install
 ```
 
 Once that's done, you can run:
 
-```sh
+```
 $ grunt build
 ```
 
@@ -41,7 +41,7 @@ Release management is easy, once you're finished writing your new features and
 everything is tested and merged onto master, simply run one of the following
 (depending on what sort of release you're doing):
 
-```sh
+```
 $ grunt release:patch
 $ grunt release:minor
 $ grunt release:major
