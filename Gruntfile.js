@@ -8,8 +8,18 @@ module.exports = function(grunt) {
           join: true
         },
         files:{
-          'build/<%= pkg.name %>-<%= pkg.version %>.js': ['src/*.coffee']
+          'tmp/<%= pkg.name %>-core-<%= pkg.version %>.js': ['src/**/*.coffee']
         }
+      }
+    },
+
+    concat: {
+      options: {
+        banner: '/*! <%= pkg.name %> v<%= pkg.version %> | <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+      },
+      build:{
+        src: ["lib/*.js", "tmp/*.js"],
+        dest: "build/<%= pkg.name %>-<%= pkg.version %>.js"
       }
     },
 
@@ -18,8 +28,9 @@ module.exports = function(grunt) {
         banner: '/*! <%= pkg.name %> v<%= pkg.version %> | <%= grunt.template.today("yyyy-mm-dd") %> */\n'
       },
       build: {
-        src: 'build/<%= pkg.name %>-<%= pkg.version %>.js',
-        dest: 'build/<%= pkg.name %>-<%= pkg.version %>.min.js'
+        files: {
+          'build/<%= pkg.name %>-<%= pkg.version %>.min.js': ['build/<%= pkg.name %>-<%= pkg.version %>.js']
+        }
       }
     },
 
@@ -29,6 +40,7 @@ module.exports = function(grunt) {
     }
   });
 
+  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-git');
@@ -36,7 +48,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-nodeunit');
 
   grunt.registerTask('default', ['test']);
-  grunt.registerTask('build', ['coffee', 'uglify'])
+  grunt.registerTask('build', ['coffee:compile', 'concat:build', 'uglify:build'])
 
   grunt.registerTask('test', 'runs tests', function(){
     grunt.log.write('Running test suite');
