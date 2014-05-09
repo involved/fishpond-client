@@ -8,7 +8,7 @@ module.exports = function(grunt) {
           join: true
         },
         files:{
-          'tmp/<%= pkg.name %>-core-<%= pkg.version %>.js': ['src/**/*.coffee']
+          'tmp/<%= pkg.name %>-core.js': ['src/**/*.coffee']
         }
       }
     },
@@ -19,7 +19,7 @@ module.exports = function(grunt) {
       },
       build:{
         src: ["lib/*.js", "tmp/*.js"],
-        dest: "build/<%= pkg.name %>-<%= pkg.version %>.js"
+        dest: "build/<%= pkg.name %>.js"
       }
     },
 
@@ -29,9 +29,23 @@ module.exports = function(grunt) {
       },
       build: {
         files: {
-          'build/<%= pkg.name %>-<%= pkg.version %>.min.js': ['build/<%= pkg.name %>-<%= pkg.version %>.js']
+          'build/<%= pkg.name %>.min.js': ['build/<%= pkg.name %>.js']
         }
       }
+    },
+
+    clean:{
+      build: ["tmp/*.js", "build/*.js"]
+    },
+
+    'release-it':{
+      options:{
+        commitMessage: "Release v<%= pkg.version %>",
+        tagName: "v<%= pkg.version %>",
+        tagAnnotation: "Release v<%= pkg.version %>",
+        buildCommand: 'grunt build',
+        publish: false
+      },
     },
 
     nodeunit: {
@@ -44,11 +58,15 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-git');
-  grunt.loadNpmTasks('grunt-release');
   grunt.loadNpmTasks('grunt-contrib-nodeunit');
+  grunt.loadNpmTasks('grunt-release-steps');
+  grunt.loadNpmTasks('grunt-contrib-clean');
 
   grunt.registerTask('default', ['test']);
-  grunt.registerTask('build', ['coffee:compile', 'concat:build', 'uglify:build'])
+  grunt.registerTask('build', ['clean:build', 'coffee:compile', 'concat:build', 'uglify:build'])
+  grunt.registerTask('release:patch', ['release:bump:patch', 'build', 'release:add:commit:tag:pushTags'])
+  grunt.registerTask('release:minor', ['release:bump:minor', 'build', 'release:add:commit:tag:pushTags'])
+  grunt.registerTask('release:major', ['release:bump:major', 'build', 'release:add:commit:tag:pushTags'])
 
   grunt.registerTask('test', 'runs tests', function(){
     grunt.log.write('Running test suite');
