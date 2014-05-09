@@ -180,13 +180,6 @@ var JSONP = (function(){
     __slice = [].slice,
     __hasProp = {}.hasOwnProperty;
 
-  Fishpond.prototype.track = function(category, action, label, value) {
-    if (this.event_tracking_enabled) {
-      this.log("Tracking: " + category + " | " + action + " | " + label + " | " + value);
-      return _gaq.push(['_trackEvent', category, action, label, value]);
-    }
-  };
-
   root = typeof exports !== "undefined" && exports !== null ? exports : this;
 
   root.Fishpond = (function() {
@@ -268,6 +261,13 @@ var JSONP = (function(){
     return Fishpond;
 
   })();
+
+  Fishpond.prototype.track = function(category, action, label, value) {
+    if (this.event_tracking_enabled) {
+      this.log("Tracking: " + category + " | " + action + " | " + label + " | " + value);
+      return _gaq.push(['_trackEvent', category, action, label, value]);
+    }
+  };
 
   Fishpond.prototype.loading = function(callback) {
     this.callbacks || (this.callbacks = {});
