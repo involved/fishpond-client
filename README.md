@@ -3,6 +3,13 @@ fishpond-client
 
 JavaScript client for Fishpond/iFish.io
 
+To work directly on this library, you'll need to have [npm]() installed, and
+install all the development dependencies locally with:
+
+```
+$ npm install
+```
+
 
 ## Testing
 
@@ -13,17 +20,9 @@ directory. To run the tests locally just do:
 $ grunt test
 ```
 
-
 ## Building
 
-To build the fishpond client on your machine, first you need to install all the
-modules:
-
-```
-$ npm install
-```
-
-Once that's done, you can run:
+Building is easy, you just do:
 
 ```
 $ grunt build
