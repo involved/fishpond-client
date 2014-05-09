@@ -15,7 +15,7 @@ module.exports = function(grunt) {
 
     concat: {
       options: {
-        banner: '/*! <%= pkg.name %> v<%= pkg.version %> | <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+        banner: '/*! <%= pkg.name %> v<%= grunt.file.readJSON("package.json").version %> | <%= grunt.template.today("yyyy-mm-dd") %> */\n'
       },
       build:{
         src: ["lib/*.js", "tmp/*.js"],
@@ -25,7 +25,7 @@ module.exports = function(grunt) {
 
     uglify: {
       options: {
-        banner: '/*! <%= pkg.name %> v<%= pkg.version %> | <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+        banner: '/*! <%= pkg.name %> v<%= grunt.file.readJSON("package.json").version %> | <%= grunt.template.today("yyyy-mm-dd") %> */\n'
       },
       build: {
         files: {
@@ -40,15 +40,15 @@ module.exports = function(grunt) {
 
     release: {
       options: {
-        commitMessage: 'Release v<%= pkg.version %>',
-        tagMessage: 'Release v<%= pkg.version %>'
+        commitMessage: 'Release v<%= grunt.file.readJSON("package.json").version %>',
+        tagMessage: 'Release v<%= grunt.file.readJSON("package.json").version %>'
       },
     },
 
     gitcommit:{
       release:{
         options:{
-          message: "Release v<%= pkg.version %>"
+          message: 'Release v<%= grunt.file.readJSON("package.json").version %>'
         },
         files: {
           src: ['build/*.js', 'package.json']
