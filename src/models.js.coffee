@@ -140,7 +140,7 @@ class Fishpond::Fish
       query_groups.push(this.pond.get_filter(filter_id).group) if Boolean(value)
 
     for filter_index, filter of this.pond.filters
-      if query_filters[filter.id]
+      if filter && query_filters[filter.id]
         filter_groups.push(filter.group) if Boolean(this.tags[filter.id]) && Boolean(query_filters[filter.id])
 
     query_groups = Fishpond::array_unique(query_groups)

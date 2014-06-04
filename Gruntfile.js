@@ -8,7 +8,7 @@ module.exports = function(grunt) {
           join: true
         },
         files:{
-          'tmp/<%= pkg.name %>-core.js': ['src/base.js.coffee', 'src/**/*.coffee']
+          'tmp/<%= pkg.name %>-core.js': ['src/base.js.coffee', 'src/**/*.coffee', 'lib/**/*.coffee']
         }
       }
     },
