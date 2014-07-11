@@ -25,8 +25,9 @@ class Fishpond::Connection
 
   parameterize_data: (params) ->
     pairs = []
-    do proc = (object=params, prefix=null) ->
+    do proc = (object=params, parent_prefix=null) ->
       for own key, value of object
+        prefix = parent_prefix
         if value instanceof Array
           for el, i in value
             proc(el, if prefix? then "#{prefix}[#{key}][]" else "#{key}[]")
@@ -53,9 +54,13 @@ class Fishpond::Connection
     data.v = "1"
     data.k = _fishpond.api_key
 
-    parameter_string = this.parameterize_data(data)
+    if @fishpond.options['include_metadata']
+      data.m = "1"
 
-    this.connect url, data, (response) ->
+    parameter_string = this.parameterize_data(data)
+    full_request_url = "#{url}?#{parameter_string}"
+
+    this.connect full_request_url, {}, (response) ->
       _fishpond.debug("Success");
       _fishpond.debug(response)
       _connection.current_requests -= 1

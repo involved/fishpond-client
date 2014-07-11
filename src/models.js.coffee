@@ -94,7 +94,8 @@ class Fishpond::Pond
   load_fish: (page, complete) ->
     _pond = this
     _fishpond = @fishpond
-    _fishpond.connection.request ['ponds', @id, "fish?page=#{page}"], (response) ->
+
+    handler = (response) ->
       for fish_response in response
         fish = new Fishpond::Fish(_pond)
         fish.build(fish_response)
@@ -106,6 +107,8 @@ class Fishpond::Pond
         _pond.load_fish(page + 1, complete)
       else
         complete()
+
+    _fishpond.connection.request ['ponds', @id, "fish"], handler, {page: page}
 
 
 class Fishpond::Fish
@@ -122,6 +125,18 @@ class Fishpond::Fish
     @up_voted = false
     @metadata = {}
     this.humanize_tags()
+    this.injest_metadata(api_response)
+
+  # Checks for the presence of metadata in a given object and caches it
+  #
+  # @param [Object] data the data, usually from an API response
+  #
+  injest_metadata: (data) ->
+    reserved_fields = ['id', 'title', 'tags', 'community_tags']
+    for field, value of data
+      if reserved_fields.indexOf(field) == -1
+        @metadata[field] = value
+        @is_cached = true
 
   humanize_tags: ->
     for tag_id, value of @tags
@@ -193,9 +208,9 @@ class Fishpond::Fish
     handler = (response) ->
       callback()
 
-    for tag_name, value of community_humanized_tags
-      token = _fish.pond.get_tag_by_name(tag_name).id
-      community_tags[token] = value
+    for tag_slug, value of community_humanized_tags
+      tag_id = _fish.pond.tag_ids[tag_slug]
+      community_tags[tag_id] = value
 
     @pond.fishpond.connection.request ['ponds', @pond.id, 'fish', this.id, 'feedbacks'], handler, { community_feedback: community_tags }
 
@@ -204,18 +219,13 @@ class Fishpond::Fish
     @pond.fishpond.connection.request ['ponds', @pond.id, 'fish', this.id, 'up_vote'], (response) ->
       _fish.up_voted = true
 
-  load_metadata: (callback) ->
-    console.warn "Warning `Fishpond::Fish.load_metadata` has been deprecated. Please use `get_metadata` instead."
-
-  # this is unfinished, but all the calls to data loading should route through this method instead.
   get_metadata: (callback) ->
     if @is_cached
       callback(this)
     else
       _fish = this
       @pond.fishpond.connection.request ['ponds', @pond.id, 'fish', this.id], (response) ->
-        _fish.metadata = response
-        _fish.is_cached = true
+        _fish.injest_metadata(response)
         callback(_fish)
 
 class Fishpond::Result
