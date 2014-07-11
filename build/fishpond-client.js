@@ -1,4 +1,4 @@
-/*! fishpond-client v1.0.2 | 2014-06-04 */
+/*! fishpond-client v1.1.0 | 2014-07-11 */
 //----------------------------------
 // Taken from: http://stackoverflow.com/questions/2790001/fixing-javascript-array-functions-in-internet-explorer-indexof-foreach-etc
 //
@@ -318,12 +318,13 @@ var JSONP = (function(){
     Connection.prototype.parameterize_data = function(params) {
       var pairs, proc;
       pairs = [];
-      (proc = function(object, prefix) {
-        var el, i, key, value, _results;
+      (proc = function(object, parent_prefix) {
+        var el, i, key, prefix, value, _results;
         _results = [];
         for (key in object) {
           if (!__hasProp.call(object, key)) continue;
           value = object[key];
+          prefix = parent_prefix;
           if (value instanceof Array) {
             _results.push((function() {
               var _i, _len, _results1;
@@ -351,7 +352,7 @@ var JSONP = (function(){
     };
 
     Connection.prototype.process_request = function(resource, callback, post_data) {
-      var data, parameter_string, url, _connection, _fishpond;
+      var data, full_request_url, parameter_string, url, _connection, _fishpond;
       this.fishpond.debug("Requesting " + resource);
       url = this.api_resource_url(resource);
       _fishpond = this.fishpond;
@@ -362,8 +363,12 @@ var JSONP = (function(){
       }
       data.v = "1";
       data.k = _fishpond.api_key;
+      if (this.fishpond.options['include_metadata']) {
+        data.m = "1";
+      }
       parameter_string = this.parameterize_data(data);
-      return this.connect(url, data, function(response) {
+      full_request_url = "" + url + "?" + parameter_string;
+      return this.connect(full_request_url, {}, function(response) {
         _fishpond.debug("Success");
         _fishpond.debug(response);
         _connection.current_requests -= 1;
@@ -623,10 +628,10 @@ var JSONP = (function(){
     };
 
     Pond.prototype.load_fish = function(page, complete) {
-      var _fishpond, _pond;
+      var handler, _fishpond, _pond;
       _pond = this;
       _fishpond = this.fishpond;
-      return _fishpond.connection.request(['ponds', this.id, "fish?page=" + page], function(response) {
+      handler = function(response) {
         var fish, fish_response, _i, _len;
         for (_i = 0, _len = response.length; _i < _len; _i++) {
           fish_response = response[_i];
@@ -641,6 +646,9 @@ var JSONP = (function(){
         } else {
           return complete();
         }
+      };
+      return _fishpond.connection.request(['ponds', this.id, "fish"], handler, {
+        page: page
       });
     };
 
@@ -663,7 +671,24 @@ var JSONP = (function(){
       this.is_cached = false;
       this.up_voted = false;
       this.metadata = {};
-      return this.humanize_tags();
+      this.humanize_tags();
+      return this.injest_metadata(api_response);
+    };
+
+    Fish.prototype.injest_metadata = function(data) {
+      var field, reserved_fields, value, _results;
+      reserved_fields = ['id', 'title', 'tags', 'community_tags'];
+      _results = [];
+      for (field in data) {
+        value = data[field];
+        if (reserved_fields.indexOf(field) === -1) {
+          this.metadata[field] = value;
+          _results.push(this.is_cached = true);
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
     };
 
     Fish.prototype.humanize_tags = function() {
@@ -778,16 +803,16 @@ var JSONP = (function(){
     };
 
     Fish.prototype.add_community_tags = function(community_humanized_tags, callback) {
-      var community_tags, handler, tag_name, token, value, _fish;
+      var community_tags, handler, tag_id, tag_slug, value, _fish;
       community_tags = {};
       _fish = this;
       handler = function(response) {
         return callback();
       };
-      for (tag_name in community_humanized_tags) {
-        value = community_humanized_tags[tag_name];
-        token = _fish.pond.get_tag_by_name(tag_name).id;
-        community_tags[token] = value;
+      for (tag_slug in community_humanized_tags) {
+        value = community_humanized_tags[tag_slug];
+        tag_id = _fish.pond.tag_ids[tag_slug];
+        community_tags[tag_id] = value;
       }
       return this.pond.fishpond.connection.request(['ponds', this.pond.id, 'fish', this.id, 'feedbacks'], handler, {
         community_feedback: community_tags
@@ -802,10 +827,6 @@ var JSONP = (function(){
       });
     };
 
-    Fish.prototype.load_metadata = function(callback) {
-      return console.warn("Warning `Fishpond::Fish.load_metadata` has been deprecated. Please use `get_metadata` instead.");
-    };
-
     Fish.prototype.get_metadata = function(callback) {
       var _fish;
       if (this.is_cached) {
@@ -813,8 +834,7 @@ var JSONP = (function(){
       } else {
         _fish = this;
         return this.pond.fishpond.connection.request(['ponds', this.pond.id, 'fish', this.id], function(response) {
-          _fish.metadata = response;
-          _fish.is_cached = true;
+          _fish.injest_metadata(response);
           return callback(_fish);
         });
       }
