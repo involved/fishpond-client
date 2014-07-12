@@ -125,13 +125,13 @@ class Fishpond::Fish
     @up_voted = false
     @metadata = {}
     this.humanize_tags()
-    this.injest_metadata(api_response)
+    this.ingest_metadata(api_response)
 
   # Checks for the presence of metadata in a given object and caches it
   #
   # @param [Object] data the data, usually from an API response
   #
-  injest_metadata: (data) ->
+  ingest_metadata: (data) ->
     reserved_fields = ['id', 'title', 'tags', 'community_tags']
     for field, value of data
       if reserved_fields.indexOf(field) == -1
@@ -225,7 +225,7 @@ class Fishpond::Fish
     else
       _fish = this
       @pond.fishpond.connection.request ['ponds', @pond.id, 'fish', this.id], (response) ->
-        _fish.injest_metadata(response)
+        _fish.ingest_metadata(response)
         callback(_fish)
 
 class Fishpond::Result
