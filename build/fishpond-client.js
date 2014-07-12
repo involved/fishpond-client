@@ -1,4 +1,4 @@
-/*! fishpond-client v1.1.0 | 2014-07-11 */
+/*! fishpond-client v1.1.1 | 2014-07-12 */
 //----------------------------------
 // Taken from: http://stackoverflow.com/questions/2790001/fixing-javascript-array-functions-in-internet-explorer-indexof-foreach-etc
 //
@@ -672,10 +672,10 @@ var JSONP = (function(){
       this.up_voted = false;
       this.metadata = {};
       this.humanize_tags();
-      return this.injest_metadata(api_response);
+      return this.ingest_metadata(api_response);
     };
 
-    Fish.prototype.injest_metadata = function(data) {
+    Fish.prototype.ingest_metadata = function(data) {
       var field, reserved_fields, value, _results;
       reserved_fields = ['id', 'title', 'tags', 'community_tags'];
       _results = [];
@@ -834,7 +834,7 @@ var JSONP = (function(){
       } else {
         _fish = this;
         return this.pond.fishpond.connection.request(['ponds', this.pond.id, 'fish', this.id], function(response) {
-          _fish.injest_metadata(response);
+          _fish.ingest_metadata(response);
           return callback(_fish);
         });
       }
