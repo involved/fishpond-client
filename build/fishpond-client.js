@@ -1,4 +1,4 @@
-/*! fishpond-client v1.1.1 | 2014-07-12 */
+/*! fishpond-client v1.1.2 | 2014-08-04 */
 //----------------------------------
 // Taken from: http://stackoverflow.com/questions/2790001/fixing-javascript-array-functions-in-internet-explorer-indexof-foreach-etc
 //
@@ -702,7 +702,7 @@ var JSONP = (function(){
             name: this.pond.humanized_tag_name(tag_id),
             slug: this.pond.slugged_tag_name(tag_id),
             token: tag_id,
-            value: value
+            value: parseInt(value, 10)
           });
         }
         if (this.pond.is_filter(tag_id)) {
@@ -710,7 +710,7 @@ var JSONP = (function(){
             name: this.pond.humanized_filter_name(tag_id),
             slug: this.pond.slugged_filter_name(tag_id),
             token: tag_id,
-            value: value
+            value: Boolean(parseInt(value, 10))
           }));
         } else {
           _results.push(void 0);
@@ -726,7 +726,7 @@ var JSONP = (function(){
       query_groups = [];
       for (filter_id in query_filters) {
         value = query_filters[filter_id];
-        if (Boolean(value)) {
+        if (Boolean(parseInt(value, 10))) {
           query_groups.push(this.pond.get_filter(filter_id).group);
         }
       }
@@ -734,7 +734,7 @@ var JSONP = (function(){
       for (filter_index in _ref) {
         filter = _ref[filter_index];
         if (filter && query_filters[filter.id]) {
-          if (Boolean(this.tags[filter.id]) && Boolean(query_filters[filter.id])) {
+          if (Boolean(parseInt(this.tags[filter.id], 10)) && Boolean(parseInt(query_filters[filter.id], 10))) {
             filter_groups.push(filter.group);
           }
         }
@@ -745,22 +745,6 @@ var JSONP = (function(){
         return false;
       }
       return Fishpond.prototype.arrays_equal(query_groups, filter_groups);
-    };
-
-    Fish.prototype.is_filtered = function(query_filters) {
-      var filter_count, filter_id, filtered, value;
-      filter_count = 0;
-      filtered = true;
-      for (filter_id in query_filters) {
-        value = query_filters[filter_id];
-        if (Boolean(value)) {
-          filter_count += 1;
-          if (Boolean(this.tags[filter_id])) {
-            filtered = false;
-          }
-        }
-      }
-      return filter_count > 0 && filtered;
     };
 
     Fish.prototype.popularity = function() {
@@ -780,6 +764,7 @@ var JSONP = (function(){
 
     Fish.prototype.calculate_tag_score = function(tag_id, value, community_ratio) {
       var difference;
+      value = parseInt(value, 10);
       if (value === false || this.tags[tag_id] === void 0) {
         return 0;
       } else {
@@ -794,7 +779,7 @@ var JSONP = (function(){
 
     Fish.prototype.community_ratio = function(query_tags) {
       var community_tag_value;
-      community_tag_value = query_tags['community'];
+      community_tag_value = parseInt(query_tags['community'], 10);
       if (community_tag_value === void 0) {
         return 0;
       } else {
@@ -812,7 +797,7 @@ var JSONP = (function(){
       for (tag_slug in community_humanized_tags) {
         value = community_humanized_tags[tag_slug];
         tag_id = _fish.pond.tag_ids[tag_slug];
-        community_tags[tag_id] = value;
+        community_tags[tag_id] = parseInt(value, 10);
       }
       return this.pond.fishpond.connection.request(['ponds', this.pond.id, 'fish', this.id, 'feedbacks'], handler, {
         community_feedback: community_tags
@@ -924,7 +909,9 @@ var JSONP = (function(){
       result = new Fishpond.prototype.Result;
       result.score = fish.title.score(string);
       result.fish = fish;
-      results.push(result);
+      if (result.score > 0) {
+        results.push(result);
+      }
     }
     results.sort(function(result1, result2) {
       if (result1.score === result2.score) {
