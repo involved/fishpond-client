@@ -175,6 +175,7 @@ class Fishpond::Fish
     Math.round(score)
 
   calculate_tag_score: (tag_id, value, community_ratio) ->
+    value = parseInt(value, 10)
     if value is false || this.tags[tag_id] is undefined
       0
     else
@@ -186,7 +187,7 @@ class Fishpond::Fish
       difference * difference
 
   community_ratio: (query_tags) ->
-    community_tag_value = query_tags['community']
+    community_tag_value = parseInt(query_tags['community'], 10)
     if community_tag_value is undefined
       0
     else
@@ -200,7 +201,7 @@ class Fishpond::Fish
 
     for tag_slug, value of community_humanized_tags
       tag_id = _fish.pond.tag_ids[tag_slug]
-      community_tags[tag_id] = value
+      community_tags[tag_id] = parseInt(value, 10)
 
     @pond.fishpond.connection.request ['ponds', @pond.id, 'fish', this.id, 'feedbacks'], handler, { community_feedback: community_tags }
 
