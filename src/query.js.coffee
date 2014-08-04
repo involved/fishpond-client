@@ -64,7 +64,8 @@ Fishpond::search = (string) ->
     result = new Fishpond::Result
     result.score = fish.title.score(string)
     result.fish = fish
-    results.push result
+    if result.score > 0
+      results.push result
 
   results.sort (result1, result2) ->
     return 0 if result1.score == result2.score
