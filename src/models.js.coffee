@@ -141,10 +141,10 @@ class Fishpond::Fish
   humanize_tags: ->
     for tag_id, value of @tags
       if this.pond.is_tag(tag_id)
-        @humanized_tags.push({name:this.pond.humanized_tag_name(tag_id), slug:this.pond.slugged_tag_name(tag_id), token:tag_id, value:value})
+        @humanized_tags.push({name:this.pond.humanized_tag_name(tag_id), slug:this.pond.slugged_tag_name(tag_id), token:tag_id, value:parseInt(value, 10)})
 
       if this.pond.is_filter(tag_id)
-        @humanized_filters.push({name:this.pond.humanized_filter_name(tag_id), slug:this.pond.slugged_filter_name(tag_id), token:tag_id, value:value})
+        @humanized_filters.push({name:this.pond.humanized_filter_name(tag_id), slug:this.pond.slugged_filter_name(tag_id), token:tag_id, value:Boolean(parseInt(value, 10))})
 
   matches_filters: (query_filters) ->
     filtered = true
@@ -152,27 +152,17 @@ class Fishpond::Fish
     query_groups = []
 
     for filter_id, value of query_filters
-      query_groups.push(this.pond.get_filter(filter_id).group) if Boolean(value)
+      query_groups.push(this.pond.get_filter(filter_id).group) if Boolean(parseInt(value, 10))
 
     for filter_index, filter of this.pond.filters
       if filter && query_filters[filter.id]
-        filter_groups.push(filter.group) if Boolean(this.tags[filter.id]) && Boolean(query_filters[filter.id])
+        filter_groups.push(filter.group) if Boolean(parseInt(this.tags[filter.id], 10)) && Boolean(parseInt(query_filters[filter.id], 10))
 
     query_groups = Fishpond::array_unique(query_groups)
     filter_groups = Fishpond::array_unique(filter_groups)
     return false if query_groups.count == 0
 
     Fishpond::arrays_equal(query_groups, filter_groups)
-
-
-  is_filtered: (query_filters) ->
-    filter_count = 0
-    filtered = true
-    for filter_id, value of query_filters
-      if Boolean(value)
-        filter_count += 1
-        filtered = false if Boolean(this.tags[filter_id])
-    filter_count > 0 && filtered
 
   popularity: ->
     this.tags['popularity']
