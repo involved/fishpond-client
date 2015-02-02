@@ -6,9 +6,11 @@ class Fishpond::Pond
     @name = api_response.name
     @fish_count = api_response.fish_count
     @tags = api_response.tags
-    @filters = api_response.filters
+    @filters = (filter for filter in api_response.filters when filter.category == null)
+    @categorized_filters = (filter for filter in api_response.filters when filter.category)
     @tag_ids = { community:'community' }
     @filter_ids = {}
+    @categorized_filters_by_category = {}
     @fish = []
 
     for tag in @tags
@@ -16,6 +18,12 @@ class Fishpond::Pond
 
     for filter in @filters
       @filter_ids[filter.slug] = filter.id
+
+    for filter in @categorized_filters
+      @filter_ids[filter.slug] = filter.id
+      if !@categorized_filters_by_category[filter.category]
+        @categorized_filters_by_category[filter.category] = []
+      @categorized_filters_by_category[filter.category].push(filter)
 
   toString: ->
     @name
@@ -47,7 +55,7 @@ class Fishpond::Pond
 
   default_query_filters: ->
     default_filters = {}
-    for filter in this.filters
+    for filter in this.filters.concat(this.categorized_filters)
       default_filters[filter.id] = false
     default_filters
 
@@ -89,6 +97,11 @@ class Fishpond::Pond
     for filter in @filters
       if filter.id == id
         return filter
+
+    for filter in @categorized_filters
+      if filter.id == id
+        return filter
+
     false
 
   load_fish: (page, complete) ->
@@ -154,7 +167,7 @@ class Fishpond::Fish
     for filter_id, value of query_filters
       query_groups.push(this.pond.get_filter(filter_id).group) if Boolean(parseInt(value, 10))
 
-    for filter_index, filter of this.pond.filters
+    for filter_index, filter of this.pond.filters.concat(this.pond.categorized_filters)
       if filter && query_filters[filter.id]
         filter_groups.push(filter.group) if Boolean(parseInt(this.tags[filter.id], 10)) && Boolean(parseInt(query_filters[filter.id], 10))
 

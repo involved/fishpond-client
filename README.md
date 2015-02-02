@@ -10,7 +10,6 @@ install all the development dependencies locally with:
 $ npm install
 ```
 
-
 ## Testing
 
 Tests are written in nodeunit coffeescript and can be found in the `/test`

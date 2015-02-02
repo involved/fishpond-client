@@ -30,6 +30,7 @@ Fishpond::query = (query_tags, query_filters) ->
 
   # score calculations
   results = []
+  console.log(filters)
   for fish in @pond.fish
     if fish.matches_filters(filters)
       result = new Fishpond::Result

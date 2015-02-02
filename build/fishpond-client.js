@@ -1,4 +1,4 @@
-/*! fishpond-client v1.1.2 | 2014-08-04 */
+/*! fishpond-client v1.1.2 | 2015-02-02 */
 //----------------------------------
 // Taken from: http://stackoverflow.com/questions/2790001/fixing-javascript-array-functions-in-internet-explorer-indexof-foreach-etc
 //
@@ -455,16 +455,40 @@ var JSONP = (function(){
     }
 
     Pond.prototype.build = function(api_response) {
-      var filter, tag, _i, _j, _len, _len1, _ref, _ref1, _results;
+      var filter, tag, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _results;
       this.id = api_response.id;
       this.name = api_response.name;
       this.fish_count = api_response.fish_count;
       this.tags = api_response.tags;
-      this.filters = api_response.filters;
+      this.filters = (function() {
+        var _i, _len, _ref, _results;
+        _ref = api_response.filters;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          filter = _ref[_i];
+          if (filter.category === null) {
+            _results.push(filter);
+          }
+        }
+        return _results;
+      })();
+      this.categorized_filters = (function() {
+        var _i, _len, _ref, _results;
+        _ref = api_response.filters;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          filter = _ref[_i];
+          if (filter.category) {
+            _results.push(filter);
+          }
+        }
+        return _results;
+      })();
       this.tag_ids = {
         community: 'community'
       };
       this.filter_ids = {};
+      this.categorized_filters_by_category = {};
       this.fish = [];
       _ref = this.tags;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -472,10 +496,19 @@ var JSONP = (function(){
         this.tag_ids[tag.slug] = tag.id;
       }
       _ref1 = this.filters;
-      _results = [];
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         filter = _ref1[_j];
-        _results.push(this.filter_ids[filter.slug] = filter.id);
+        this.filter_ids[filter.slug] = filter.id;
+      }
+      _ref2 = this.categorized_filters;
+      _results = [];
+      for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+        filter = _ref2[_k];
+        this.filter_ids[filter.slug] = filter.id;
+        if (!this.categorized_filters_by_category[filter.category]) {
+          this.categorized_filters_by_category[filter.category] = [];
+        }
+        _results.push(this.categorized_filters_by_category[filter.category].push(filter));
       }
       return _results;
     };
@@ -537,7 +570,7 @@ var JSONP = (function(){
     Pond.prototype.default_query_filters = function() {
       var default_filters, filter, _i, _len, _ref;
       default_filters = {};
-      _ref = this.filters;
+      _ref = this.filters.concat(this.categorized_filters);
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         filter = _ref[_i];
         default_filters[filter.id] = false;
@@ -616,10 +649,17 @@ var JSONP = (function(){
     };
 
     Pond.prototype.get_filter = function(id) {
-      var filter, _i, _len, _ref;
+      var filter, _i, _j, _len, _len1, _ref, _ref1;
       _ref = this.filters;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         filter = _ref[_i];
+        if (filter.id === id) {
+          return filter;
+        }
+      }
+      _ref1 = this.categorized_filters;
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        filter = _ref1[_j];
         if (filter.id === id) {
           return filter;
         }
@@ -730,7 +770,7 @@ var JSONP = (function(){
           query_groups.push(this.pond.get_filter(filter_id).group);
         }
       }
-      _ref = this.pond.filters;
+      _ref = this.pond.filters.concat(this.pond.categorized_filters);
       for (filter_index in _ref) {
         filter = _ref[filter_index];
         if (filter && query_filters[filter.id]) {
@@ -864,6 +904,7 @@ var JSONP = (function(){
       }
     }
     results = [];
+    console.log(filters);
     _ref = this.pond.fish;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       fish = _ref[_i];
