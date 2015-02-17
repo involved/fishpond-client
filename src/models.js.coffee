@@ -5,6 +5,7 @@ class Fishpond::Pond
     @id = api_response.id
     @name = api_response.name
     @fish_count = api_response.fish_count
+    @api_page_count = api_response.page_count
     @tags = api_response.tags
     @filters = (filter for filter in api_response.filters when filter.category == null)
     @categorized_filters = (filter for filter in api_response.filters when filter.category)
@@ -30,7 +31,8 @@ class Fishpond::Pond
 
   load_all_fish: (complete) ->
     @fishpond.debug("Loading #{this.fish_count} fish")
-    this.load_fish(1, complete)
+    for i in [1..@api_page_count]
+      this.load_fish(i, complete)
 
   find_fish: (fish_id) ->
     for f in @fish
@@ -116,10 +118,13 @@ class Fishpond::Pond
 
       _fishpond.trigger('loading', (_pond.fish.length/_pond.fish_count))
       _fishpond.debug("Loaded #{_pond.fish.length}/#{_pond.fish_count}")
-      if response.length > 0
-        _pond.load_fish(page + 1, complete)
-      else
+
+      if _pond.fish.length == _pond.fish_count
         complete()
+      # if response.length > 0
+      #   _pond.load_fish(page + 1, complete)
+      # else
+      #   complete()
 
     _fishpond.connection.request ['ponds', @id, "fish"], handler, {page: page}
 

@@ -6,7 +6,7 @@ class Fishpond::Connection
     @api_endpoint = "http://www.ifish.io/api"
     @request_queue = []
     @current_requests = 0
-    @max_simultaneous_requests = 2
+    @max_simultaneous_requests = 4
 
     if @fishpond.options['development']
       @fishpond.debug "Development connection selected"
@@ -68,7 +68,7 @@ class Fishpond::Connection
       _connection.check_queue_and_process_next()
 
   check_queue_and_process_next: ->
-    if(@current_requests < @max_simultaneous_requests && @request_queue.length > 0)
+    while(@current_requests < @max_simultaneous_requests && @request_queue.length > 0)
       @current_requests += 1
       first_queue_item = @request_queue.shift()
       this.process_request(first_queue_item['resource'], first_queue_item['callback'], first_queue_item['data'])
