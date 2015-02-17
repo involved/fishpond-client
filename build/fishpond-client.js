@@ -1,4 +1,4 @@
-/*! fishpond-client v1.3.1 | 2015-02-17 */
+/*! fishpond-client v1.3.2 | 2015-02-18 */
 //----------------------------------
 // Taken from: http://stackoverflow.com/questions/2790001/fixing-javascript-array-functions-in-internet-explorer-indexof-foreach-etc
 //
@@ -587,7 +587,7 @@ var JSONP = (function(){
     };
 
     Pond.prototype.slugged_filter_name = function(id) {
-      var filter, _i, _len, _ref;
+      var filter, _i, _j, _len, _len1, _ref, _ref1;
       _ref = this.filters;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         filter = _ref[_i];
@@ -595,13 +595,27 @@ var JSONP = (function(){
           return filter.slug;
         }
       }
+      _ref1 = this.categorized_filters;
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        filter = _ref1[_j];
+        if (filter.id === id) {
+          return filter.slug;
+        }
+      }
     };
 
     Pond.prototype.humanized_filter_name = function(id) {
-      var filter, _i, _len, _ref;
+      var filter, _i, _j, _len, _len1, _ref, _ref1;
       _ref = this.filters;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         filter = _ref[_i];
+        if (filter.id === id) {
+          return filter.name;
+        }
+      }
+      _ref1 = this.categorized_filters;
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        filter = _ref1[_j];
         if (filter.id === id) {
           return filter.name;
         }
@@ -611,6 +625,18 @@ var JSONP = (function(){
     Pond.prototype.is_filter = function(id) {
       var filter, _i, _len, _ref;
       _ref = this.filters;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        filter = _ref[_i];
+        if (filter.id === id) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    Pond.prototype.is_categorized_filter = function(id) {
+      var filter, _i, _len, _ref;
+      _ref = this.categorized_filters;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         filter = _ref[_i];
         if (filter.id === id) {
@@ -714,6 +740,7 @@ var JSONP = (function(){
       this.community_tags = api_response.community_tags;
       this.humanized_tags = [];
       this.humanized_filters = [];
+      this.humanized_categorized_filters = {};
       this.is_cached = false;
       this.up_voted = false;
       this.metadata = {};
@@ -738,7 +765,7 @@ var JSONP = (function(){
     };
 
     Fish.prototype.humanize_tags = function() {
-      var tag_id, value, _ref, _results;
+      var filter, tag_id, value, _ref, _results;
       _ref = this.tags;
       _results = [];
       for (tag_id in _ref) {
@@ -751,8 +778,20 @@ var JSONP = (function(){
             value: parseInt(value, 10)
           });
         }
-        if (this.pond.is_filter(tag_id)) {
-          _results.push(this.humanized_filters.push({
+        if (this.pond.is_filter(tag_id) || this.pond.is_categorized_filter(tag_id)) {
+          this.humanized_filters.push({
+            name: this.pond.humanized_filter_name(tag_id),
+            slug: this.pond.slugged_filter_name(tag_id),
+            token: tag_id,
+            value: Boolean(parseInt(value, 10))
+          });
+        }
+        if (this.pond.is_categorized_filter(tag_id)) {
+          filter = this.pond.get_filter(tag_id);
+          if (!this.humanized_categorized_filters[filter.category]) {
+            this.humanized_categorized_filters[filter.category] = [];
+          }
+          _results.push(this.humanized_categorized_filters[filter.category].push({
             name: this.pond.humanized_filter_name(tag_id),
             slug: this.pond.slugged_filter_name(tag_id),
             token: tag_id,
@@ -763,6 +802,17 @@ var JSONP = (function(){
         }
       }
       return _results;
+    };
+
+    Fish.prototype.has_category = function(category, slug) {
+      var filter, i;
+      for (i in this.humanized_categorized_filters[category]) {
+        filter = this.humanized_categorized_filters[category][i];
+        if (filter.slug === slug) {
+          return filter.value;
+        }
+      }
+      return false;
     };
 
     Fish.prototype.matches_filters = function(query_filters) {
