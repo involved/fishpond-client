@@ -1,4 +1,4 @@
-/*! fishpond-client v1.2.0 | 2015-02-02 */
+/*! fishpond-client v1.3.0 | 2015-02-17 */
 //----------------------------------
 // Taken from: http://stackoverflow.com/questions/2790001/fixing-javascript-array-functions-in-internet-explorer-indexof-foreach-etc
 //
@@ -296,7 +296,7 @@ var JSONP = (function(){
       this.api_endpoint = "http://www.ifish.io/api";
       this.request_queue = [];
       this.current_requests = 0;
-      this.max_simultaneous_requests = 2;
+      this.max_simultaneous_requests = 4;
       if (this.fishpond.options['development']) {
         this.fishpond.debug("Development connection selected");
         this.api_endpoint = "http://" + window.location.host + "/api";
@@ -378,12 +378,14 @@ var JSONP = (function(){
     };
 
     Connection.prototype.check_queue_and_process_next = function() {
-      var first_queue_item;
-      if (this.current_requests < this.max_simultaneous_requests && this.request_queue.length > 0) {
+      var first_queue_item, _results;
+      _results = [];
+      while (this.current_requests < this.max_simultaneous_requests && this.request_queue.length > 0) {
         this.current_requests += 1;
         first_queue_item = this.request_queue.shift();
-        return this.process_request(first_queue_item['resource'], first_queue_item['callback'], first_queue_item['data']);
+        _results.push(this.process_request(first_queue_item['resource'], first_queue_item['callback'], first_queue_item['data']));
       }
+      return _results;
     };
 
     Connection.prototype.send_request = function(resource, callback, data) {
@@ -459,6 +461,7 @@ var JSONP = (function(){
       this.id = api_response.id;
       this.name = api_response.name;
       this.fish_count = api_response.fish_count;
+      this.api_page_count = api_response.page_count;
       this.tags = api_response.tags;
       this.filters = (function() {
         var _i, _len, _ref, _results;
@@ -518,8 +521,13 @@ var JSONP = (function(){
     };
 
     Pond.prototype.load_all_fish = function(complete) {
+      var i, _i, _ref, _results;
       this.fishpond.debug("Loading " + this.fish_count + " fish");
-      return this.load_fish(1, complete);
+      _results = [];
+      for (i = _i = 1, _ref = this.api_page_count; 1 <= _ref ? _i <= _ref : _i >= _ref; i = 1 <= _ref ? ++_i : --_i) {
+        _results.push(this.load_fish(i, complete));
+      }
+      return _results;
     };
 
     Pond.prototype.find_fish = function(fish_id) {
@@ -681,9 +689,7 @@ var JSONP = (function(){
         }
         _fishpond.trigger('loading', _pond.fish.length / _pond.fish_count);
         _fishpond.debug("Loaded " + _pond.fish.length + "/" + _pond.fish_count);
-        if (response.length > 0) {
-          return _pond.load_fish(page + 1, complete);
-        } else {
+        if (_pond.fish.length === _pond.fish_count) {
           return complete();
         }
       };
