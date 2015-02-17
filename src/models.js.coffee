@@ -65,14 +65,27 @@ class Fishpond::Pond
     for filter in @filters
       if filter.id == id
         return filter.slug
+    for filter in @categorized_filters
+      if filter.id == id
+        return filter.slug
 
   humanized_filter_name: (id) ->
     for filter in @filters
       if filter.id == id
         return filter.name
 
+    for filter in @categorized_filters
+      if filter.id == id
+        return filter.name
+
   is_filter: (id) ->
     for filter in @filters
+      if filter.id == id
+        return true
+    false
+
+  is_categorized_filter: (id) ->
+    for filter in @categorized_filters
       if filter.id == id
         return true
     false
@@ -139,6 +152,7 @@ class Fishpond::Fish
     @community_tags = api_response.community_tags
     @humanized_tags = []
     @humanized_filters = []
+    @humanized_categorized_filters = {}
     @is_cached = false
     @up_voted = false
     @metadata = {}
@@ -161,8 +175,23 @@ class Fishpond::Fish
       if this.pond.is_tag(tag_id)
         @humanized_tags.push({name:this.pond.humanized_tag_name(tag_id), slug:this.pond.slugged_tag_name(tag_id), token:tag_id, value:parseInt(value, 10)})
 
-      if this.pond.is_filter(tag_id)
+      if this.pond.is_filter(tag_id) || this.pond.is_categorized_filter(tag_id)
         @humanized_filters.push({name:this.pond.humanized_filter_name(tag_id), slug:this.pond.slugged_filter_name(tag_id), token:tag_id, value:Boolean(parseInt(value, 10))})
+
+      if this.pond.is_categorized_filter(tag_id)
+        filter = this.pond.get_filter(tag_id)
+
+        if !@humanized_categorized_filters[filter.category]
+          @humanized_categorized_filters[filter.category] = []
+
+        @humanized_categorized_filters[filter.category].push({name:this.pond.humanized_filter_name(tag_id), slug:this.pond.slugged_filter_name(tag_id), token:tag_id, value:Boolean(parseInt(value, 10))})
+
+  has_category: (category, slug) ->
+    for i of @humanized_categorized_filters[category]
+      filter = @humanized_categorized_filters[category][i]
+      return filter.value if filter.slug == slug
+
+    return false
 
   matches_filters: (query_filters) ->
     filtered = true
